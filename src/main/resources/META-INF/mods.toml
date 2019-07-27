@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[28,)"
+# A URL to refer people to when problems occur with this mod
+#issueTrackerURL="http://my.issue.tracker/" #optional
+
+[[mods]]
+    modId="chunknogobyebye"
+    version="${file.jarVersion}"
+    displayName="ChunkNoGoByeBye"
+    #updateJSONURL="http://myurl.me/"
+    #displayURL="http://example.com/"
+    #logoFile="examplemod.png"
+    #credits=""
+    authors="LexManos"
+    description="Adds a Block to keep the current chunk loaded using vanilla loading mechanics."
+    
+[[dependencies.chunknogobyebye]]
+    modId="forge"
+    mandatory=true
+    versionRange="[28,)"
+    ordering="NONE"
+    side="BOTH"
+    
+[[dependencies.chunknogobyebye]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.14.4]"
+    ordering="NONE"
+    side="BOTH"
