@@ -23,6 +23,7 @@ ext {
     FORGE_VERSION = '28.0.17'
     MY_VERSION = gitVersion()
     MODID = 'chunknogobyebye'
+    changelog = rootProject.file('build/changelog.txt')
 }
 
 version = "${MC_VERSION}-${MY_VERSION}"
@@ -120,6 +121,8 @@ jar.finalizedBy('reobfJar')
 artifacts {
     archives jar
     archives sourcesJar
+    if (changelog.exists())
+        archives changelog
 }
 
 publishing {
@@ -127,6 +130,11 @@ publishing {
         mavenJava(MavenPublication) {
             artifact jar
             artifact sourcesJar
+            if (changelog.exists()) {
+                artifact(changelog){
+                    classifier 'changelog'
+                }
+            }
             pom {
                 name = project.archivesBaseName
                 packaging = 'jar'
