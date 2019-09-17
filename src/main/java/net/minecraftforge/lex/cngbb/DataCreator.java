@@ -115,7 +115,7 @@ public class DataCreator {
 
         @Override
         protected void registerRecipes(Consumer<IFinishedRecipe> consumer) {
-            ShapedRecipeBuilder.shapedRecipe(LOADER_BLOCK, 10)
+            ShapedRecipeBuilder.shapedRecipe(LOADER_BLOCK.get(), 10)
                 .key('O', Items.ENDER_PEARL).key('E', Blocks.ENCHANTING_TABLE)
                 .patternLine("OOO").patternLine("OEO").patternLine("OOO")
                 .addCriterion("has_ender_pearl", hasItem(Items.ENDER_PEARL))
@@ -161,7 +161,7 @@ public class DataCreator {
             private Set<Block> knownBlocks = new HashSet<>();
 
             private void addTables() {
-                this.func_218492_c(LOADER_BLOCK);
+                this.func_218492_c(LOADER_BLOCK.get());
             }
 
             @Override
@@ -204,7 +204,7 @@ public class DataCreator {
         }
 
         private void addTranslations() {
-            add(LOADER_BLOCK, "Chunk Loader");
+            add(LOADER_BLOCK.get(), "Single Chunk Loader");
         }
 
         @Override

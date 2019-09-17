@@ -17,7 +17,7 @@ loaderVersion="[28,)"
 [[dependencies.chunknogobyebye]]
     modId="forge"
     mandatory=true
-    versionRange="[28,)"
+    versionRange="[28.1,)"
     ordering="NONE"
     side="BOTH"
     

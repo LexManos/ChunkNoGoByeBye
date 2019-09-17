@@ -20,7 +20,7 @@ apply plugin: 'maven-publish'
 
 ext {
     MC_VERSION = '1.14.4'
-    FORGE_VERSION = '28.0.17'
+    FORGE_VERSION = '28.1.0'
     MY_VERSION = gitVersion()
     MODID = 'chunknogobyebye'
     changelog = rootProject.file('build/changelog.txt')

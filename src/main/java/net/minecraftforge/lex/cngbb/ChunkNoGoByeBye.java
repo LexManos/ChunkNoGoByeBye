@@ -35,18 +35,14 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.ObjectHolder;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,21 +53,21 @@ public class ChunkNoGoByeBye {
 
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LogManager.getLogger();
-    private static List<Supplier<? extends Item>> ITEMS = new ArrayList<>();
-    private static List<Supplier<? extends Block>> BLOCKS = new ArrayList<>();
 
     @CapabilityInject(IChunkLoaderList.class)
     public static Capability<IChunkLoaderList> CAPABILITY = null;
 
-    @ObjectHolder(MODID + ":" + LOADERID)
-    public static final Block LOADER_BLOCK = registerBlock(LOADERID, () -> new LoaderBlock(Block.Properties.create(Material.ROCK).hardnessAndResistance(3.5F)));
-    @ObjectHolder(MODID + ":" + LOADERID)
-    public static final Item LOADER_ITEM = registerItem(LOADERID, () -> new BlockItem(LOADER_BLOCK, new Item.Properties().group(ItemGroup.MISC)));
+    private static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, MODID);
+    private static final DeferredRegister<Block> BLOCKS = new DeferredRegister<>(ForgeRegistries.BLOCKS, MODID);
+
+    public static final RegistryObject<Block> LOADER_BLOCK = BLOCKS.register(LOADERID, () -> new LoaderBlock(Block.Properties.create(Material.ROCK).hardnessAndResistance(3.5F)));
+    public static final RegistryObject<Item> LOADER_ITEM = ITEMS.register(LOADERID, () -> new BlockItem(LOADER_BLOCK.get(), new Item.Properties().group(ItemGroup.MISC)));
 
     public ChunkNoGoByeBye() {
+        ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setupClient);
-        FMLJavaModLoadingContext.get().getModEventBus().register(this);
         MinecraftForge.EVENT_BUS.register(this);
     }
     private void setupClient(final FMLClientSetupEvent event) {}
@@ -102,27 +98,5 @@ public class ChunkNoGoByeBye {
         };
         event.addCapability(new ResourceLocation(MODID, LOADERID), provider);
         event.addListener(() -> inst.invalidate());
-    }
-
-    /*
-     * Helper functions, because I feel like trying out this coding style.
-     * We gather things to register in the static initalizer. But since we are using Suppliers,
-     * the objects arn't actually run and this can be repeated/executed in the register events as they should be
-     */
-    private static <T extends Item> T registerItem(final String name, final Supplier<T> sup) {
-        ITEMS.add(() -> sup.get().setRegistryName(MODID, name));
-        return null;
-    }
-    private static <T extends Block> T registerBlock(final String name, final Supplier<T> sup) {
-        BLOCKS.add(() -> sup.get().setRegistryName(MODID, name));
-        return null;
-    }
-    @SubscribeEvent
-    public void registerItems(final RegistryEvent.Register<Item> event) {
-        ITEMS.stream().map(Supplier::get).forEach(event.getRegistry()::register);
-    }
-    @SubscribeEvent
-    public void registerBlocks(final RegistryEvent.Register<Block> event) {
-        BLOCKS.stream().map(Supplier::get).forEach(event.getRegistry()::register);
     }
 }
