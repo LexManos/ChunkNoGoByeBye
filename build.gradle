@@ -19,8 +19,8 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 ext {
-    MC_VERSION = '1.14.4'
-    FORGE_VERSION = '28.1.0'
+    MC_VERSION = '1.15.1'
+    FORGE_VERSION = '30.0.7'
     MY_VERSION = gitVersion()
     MODID = 'chunknogobyebye'
     changelog = rootProject.file('build/changelog.txt')
@@ -72,7 +72,7 @@ minecraft {
         data {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
+            property 'forge.logging.console.level', 'info'
 
             args '--mod', MODID, '--all', '--output', file('src/generated/resources/')
 

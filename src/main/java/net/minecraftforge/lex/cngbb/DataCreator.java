@@ -26,22 +26,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.TriConsumer;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -49,6 +48,7 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DirectoryCache;
 import net.minecraft.data.IDataProvider;
 import net.minecraft.data.IFinishedRecipe;
+import net.minecraft.data.LootTableProvider;
 import net.minecraft.data.RecipeProvider;
 import net.minecraft.data.ShapedRecipeBuilder;
 import net.minecraft.data.loot.BlockLootTables;
@@ -57,8 +57,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.storage.loot.LootParameterSet;
 import net.minecraft.world.storage.loot.LootParameterSets;
 import net.minecraft.world.storage.loot.LootTable;
-import net.minecraft.world.storage.loot.LootTableManager;
-import net.minecraft.world.storage.loot.LootTables;
+import net.minecraft.world.storage.loot.ValidationTracker;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
@@ -66,6 +65,7 @@ import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
 
 @EventBusSubscriber(modid = MODID, bus = Bus.MOD)
 public class DataCreator {
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
 
@@ -98,19 +98,8 @@ public class DataCreator {
     }
 
     private static class Recipes extends RecipeProvider {
-        private final DataGenerator gen;
-        private final Path ADV_ROOT;
-
         public Recipes(DataGenerator gen) {
             super(gen);
-            this.gen = gen;
-            ADV_ROOT = this.gen.getOutputFolder().resolve("data/minecraft/advancements/recipes/root.json");
-        }
-
-        @Override
-        protected void saveRecipeAdvancement(DirectoryCache cache, JsonObject json, Path path) {
-            if (path.equals(ADV_ROOT)) return; //We NEVER care about this.
-            super.saveRecipeAdvancement(cache, json, path);
         }
 
         @Override
@@ -123,13 +112,10 @@ public class DataCreator {
         }
     }
 
-    private static class Loots implements IDataProvider {
-        private final DataGenerator gen;
-
+    private static class Loots extends LootTableProvider {
         public Loots(DataGenerator gen) {
-            this.gen = gen;
+            super(gen);
         }
-
 
         @Override
         public String getName() {
@@ -137,58 +123,29 @@ public class DataCreator {
         }
 
         @Override
-        public void act(DirectoryCache cache) {
-            Map<ResourceLocation, LootTable> map = Maps.newHashMap();
-            TriConsumer<LootParameterSet, ResourceLocation, LootTable.Builder> consumer = (set, key, builder) -> {
-                if (map.put(key, builder.setParameterSet(set).build()) != null)
-                    throw new IllegalStateException("Duplicate loot table " + key);
-            };
-
-            new Blocks().accept((key, builder) -> consumer.accept(LootParameterSets.BLOCK, key, builder));
-
-            map.forEach((key, table) -> {
-                Path target = this.gen.getOutputFolder().resolve("data/" + key.getNamespace() + "/loot_tables/" + key.getPath() + ".json");
-
-                try {
-                   IDataProvider.save(GSON, cache, LootTableManager.toJson(table), target);
-                } catch (IOException ioexception) {
-                   LOGGER.error("Couldn't save loot table {}", target, ioexception);
-                }
-            });
+        protected List<Pair<Supplier<Consumer<BiConsumer<ResourceLocation, LootTable.Builder>>>, LootParameterSet>> getTables() {
+           return ImmutableList.of(Pair.of(Blocks::new, LootParameterSets.BLOCK));
         }
+
+        @Override
+        protected void validate(Map<ResourceLocation, LootTable> map, ValidationTracker tracker) {} //We don't do validation
 
         private class Blocks extends BlockLootTables {
             private Set<Block> knownBlocks = new HashSet<>();
 
-            private void addTables() {
+            protected void addTables() {
                 this.func_218492_c(LOADER_BLOCK.get());
-            }
-
-            @Override
-            public void accept(BiConsumer<ResourceLocation, LootTable.Builder> consumer) {
-                this.addTables();
-
-                Set<ResourceLocation> visited = Sets.newHashSet();
-
-                for(Block block : knownBlocks) {
-                   ResourceLocation tabke_name = block.getLootTable();
-                   if (tabke_name != LootTables.EMPTY && visited.add(tabke_name)) {
-                      LootTable.Builder builder = this.field_218581_i.remove(tabke_name);
-                      if (builder == null)
-                         throw new IllegalStateException(String.format("Missing loottable '%s' for '%s'", tabke_name, block.getRegistryName()));
-
-                      consumer.accept(tabke_name, builder);
-                   }
-                }
-
-                if (!this.field_218581_i.isEmpty())
-                   throw new IllegalStateException("Created block loot tables for non-blocks: " + this.field_218581_i.keySet());
             }
 
             @Override
             public void func_218492_c(Block block) {
                 knownBlocks.add(block);
                 super.func_218492_c(block);
+            }
+
+            @Override
+            protected Iterable<Block> getKnownBlocks() {
+                return this.knownBlocks;
             }
         }
     }
