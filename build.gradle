@@ -19,8 +19,8 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 ext {
-    MC_VERSION = '1.15.1'
-    FORGE_VERSION = '30.0.7'
+    MC_VERSION = '1.15.2'
+    FORGE_VERSION = '31.1.0'
     MY_VERSION = gitVersion()
     MODID = 'chunknogobyebye'
     changelog = rootProject.file('build/changelog.txt')
@@ -41,8 +41,8 @@ sourceSets {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20190719-1.14.3'
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    mappings channel: 'snapshot', version: '20200201-1.15.1'
+    //accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
         client {
@@ -73,6 +73,7 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
+            property 'fml.earlyprogresswindow', 'false'
 
             args '--mod', MODID, '--all', '--output', file('src/generated/resources/')
 

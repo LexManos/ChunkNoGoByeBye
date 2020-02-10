@@ -94,7 +94,7 @@ public class DataCreator {
            }
         }
 
-        cache.func_208316_a(target, hash);
+        cache.recordHash(target, hash);
     }
 
     private static class Recipes extends RecipeProvider {
@@ -134,13 +134,13 @@ public class DataCreator {
             private Set<Block> knownBlocks = new HashSet<>();
 
             protected void addTables() {
-                this.func_218492_c(LOADER_BLOCK.get());
+                this.registerDropSelfLootTable(LOADER_BLOCK.get());
             }
 
             @Override
-            public void func_218492_c(Block block) {
+            public void registerDropSelfLootTable(Block block) {
                 knownBlocks.add(block);
-                super.func_218492_c(block);
+                super.registerDropSelfLootTable(block);
             }
 
             @Override
