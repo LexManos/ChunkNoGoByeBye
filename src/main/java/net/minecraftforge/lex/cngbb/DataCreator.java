@@ -53,11 +53,11 @@ import net.minecraft.data.RecipeProvider;
 import net.minecraft.data.ShapedRecipeBuilder;
 import net.minecraft.data.loot.BlockLootTables;
 import net.minecraft.item.Items;
+import net.minecraft.loot.LootParameterSet;
+import net.minecraft.loot.LootParameterSets;
+import net.minecraft.loot.LootTable;
+import net.minecraft.loot.ValidationTracker;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.storage.loot.LootParameterSet;
-import net.minecraft.world.storage.loot.LootParameterSets;
-import net.minecraft.world.storage.loot.LootTable;
-import net.minecraft.world.storage.loot.ValidationTracker;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
@@ -85,8 +85,8 @@ public class DataCreator {
 
     private static void save(DirectoryCache cache, Object object, Path target) throws IOException {
         String data = GSON.toJson(object);
-        String hash = IDataProvider.HASH_FUNCTION.hashUnencodedChars(data).toString();
-        if (!Objects.equals(cache.getPreviousHash(target), hash) || !Files.exists(target)) {
+        String hash = IDataProvider.SHA1.hashUnencodedChars(data).toString();
+        if (!Objects.equals(cache.getHash(target), hash) || !Files.exists(target)) {
            Files.createDirectories(target.getParent());
 
            try (BufferedWriter bufferedwriter = Files.newBufferedWriter(target)) {
@@ -94,7 +94,7 @@ public class DataCreator {
            }
         }
 
-        cache.recordHash(target, hash);
+        cache.putNew(target, hash);
     }
 
     private static class Recipes extends RecipeProvider {
@@ -103,12 +103,12 @@ public class DataCreator {
         }
 
         @Override
-        protected void registerRecipes(Consumer<IFinishedRecipe> consumer) {
-            ShapedRecipeBuilder.shapedRecipe(LOADER_BLOCK.get(), 10)
-                .key('O', Items.ENDER_PEARL).key('E', Blocks.ENCHANTING_TABLE)
-                .patternLine("OOO").patternLine("OEO").patternLine("OOO")
-                .addCriterion("has_ender_pearl", hasItem(Items.ENDER_PEARL))
-                .build(consumer);
+        protected void buildShapelessRecipes(Consumer<IFinishedRecipe> consumer) {
+            ShapedRecipeBuilder.shaped(LOADER_BLOCK.get(), 10)
+                .define('O', Items.ENDER_PEARL).define('E', Blocks.ENCHANTING_TABLE)
+                .pattern("OOO").pattern("OEO").pattern("OOO")
+                .unlockedBy("has_ender_pearl", has(Items.ENDER_PEARL))
+                .save(consumer);
         }
     }
 
@@ -134,13 +134,13 @@ public class DataCreator {
             private Set<Block> knownBlocks = new HashSet<>();
 
             protected void addTables() {
-                this.registerDropSelfLootTable(LOADER_BLOCK.get());
+                this.dropSelf(LOADER_BLOCK.get());
             }
 
             @Override
-            public void registerDropSelfLootTable(Block block) {
+            public void dropSelf(Block block) {
                 knownBlocks.add(block);
-                super.registerDropSelfLootTable(block);
+                super.dropSelf(block);
             }
 
             @Override
@@ -170,7 +170,7 @@ public class DataCreator {
         }
 
         @Override
-        public void act(DirectoryCache cache) throws IOException {
+        public void run(DirectoryCache cache) throws IOException {
             addTranslations();
 
             if (!data.isEmpty())
@@ -178,7 +178,7 @@ public class DataCreator {
         }
 
         private void add(Block block, String name) {
-            add(block.getTranslationKey(), name);
+            add(block.getDescriptionId(), name);
         }
 
         private void add(String key, String value) {

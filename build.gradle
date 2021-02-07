@@ -1,17 +1,16 @@
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.0.+', changing: true
     }
 }
 
 plugins {
-  id 'net.minecrell.licenser' version '0.3'
-  id 'org.ajoberstar.grgit' version '2.3.0'
+  id 'org.cadixdev.licenser' version '0.5.0'
+  id 'org.ajoberstar.grgit' version '4.1.0'
 }
 
 apply plugin: 'net.minecraftforge.gradle'
@@ -19,8 +18,8 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 ext {
-    MC_VERSION = '1.15.2'
-    FORGE_VERSION = '31.1.0'
+    MC_VERSION = '1.16.5'
+    FORGE_VERSION = '36.0.14'
     MY_VERSION = gitVersion()
     MODID = 'chunknogobyebye'
     changelog = rootProject.file('build/changelog.txt')
@@ -30,7 +29,7 @@ version = "${MC_VERSION}-${MY_VERSION}"
 group = 'net.minecraftforge.lex'
 archivesBaseName = 'ChunkNoGoByeBye'
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 sourceSets {
     main {
@@ -41,7 +40,7 @@ sourceSets {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20200201-1.15.1'
+    mappings channel: 'official', version: '1.16.5'
     //accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {

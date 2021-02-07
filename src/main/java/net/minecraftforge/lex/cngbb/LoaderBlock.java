@@ -29,14 +29,14 @@ public class LoaderBlock extends Block {
     }
 
     @Override
-    public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean isMoving) {
-        if (world.isRemote) return;
+    public void onPlace(BlockState state, World world, BlockPos pos, BlockState oldState, boolean isMoving) {
+        if (world.isClientSide) return;
         world.getCapability(ChunkNoGoByeBye.CAPABILITY, null).ifPresent(cap -> cap.add(pos));
     }
 
     @Override
-    public void onReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (world.isRemote) return;
+    public void onRemove(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (world.isClientSide) return;
         world.getCapability(ChunkNoGoByeBye.CAPABILITY, null).ifPresent(cap -> cap.remove(pos));
     }
 }

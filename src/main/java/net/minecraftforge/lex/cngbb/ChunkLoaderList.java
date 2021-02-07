@@ -48,7 +48,7 @@ public class ChunkLoaderList implements IChunkLoaderList {
 
     @Override
     public void add(BlockPos pos) {
-        long block = pos.toLong();
+        long block = pos.asLong();
         if (!loaders.contains(block)) {
             long chunk = toChunk(pos);
             int ref = refCount.get(chunk);
@@ -66,7 +66,7 @@ public class ChunkLoaderList implements IChunkLoaderList {
 
     @Override
     public void remove(BlockPos pos) {
-        if (loaders.remove(pos.toLong())) {
+        if (loaders.remove(pos.asLong())) {
             long chunk = toChunk(pos);
             int ref = refCount.get(chunk);
 
@@ -82,7 +82,7 @@ public class ChunkLoaderList implements IChunkLoaderList {
 
     @Override
     public boolean contains(BlockPos pos) {
-        return loaders.contains(pos.toLong());
+        return loaders.contains(pos.asLong());
     }
 
     private final long toChunk(BlockPos pos) {
@@ -94,9 +94,9 @@ public class ChunkLoaderList implements IChunkLoaderList {
 
     private void forceload(BlockPos pos, String action) {
         if (this.world == null || this.world.getServer() == null) return;
-        CommandSource source = this.world.getServer().getCommandSource().withWorld(this.world); //TODO: Use custom source that doesn't spam chat?
+        CommandSource source = this.world.getServer().createCommandSourceStack().withLevel(this.world); //TODO: Use custom source that doesn't spam chat?
         @SuppressWarnings("unused")
-        int ret = this.world.getServer().getCommandManager().handleCommand(source, "forceload " + action + " " + pos.getX() + " " + pos.getZ());
+        int ret = this.world.getServer().getCommands().performCommand(source, "forceload " + action + " " + pos.getX() + " " + pos.getZ());
 
         //Lame feedback.
         //BasicParticleType particle = ret == 0 ? ParticleTypes.ANGRY_VILLAGER : ParticleTypes.HAPPY_VILLAGER;
@@ -124,11 +124,11 @@ public class ChunkLoaderList implements IChunkLoaderList {
             list.loaders.clear();
             try {
                 for (long l : ((LongArrayNBT)nbt).getAsLongArray()) {
-                    list.add(BlockPos.fromLong(l));
+                    list.add(BlockPos.of(l));
                 }
                 if (list.world != null) {
                     // Run the force commands next tick to make sure they wern't removed.
-                    list.world.getServer().enqueue(new TickDelayedTask(1, () -> {
+                    list.world.getServer().tell(new TickDelayedTask(1, () -> {
                         for (long l : list.refCount.keySet()) {
                             ChunkPos chunk = new ChunkPos(l);
                             list.force(new BlockPos(chunk.x << 4, 0, chunk.z << 4));

@@ -57,11 +57,11 @@ public class ChunkNoGoByeBye {
     @CapabilityInject(IChunkLoaderList.class)
     public static Capability<IChunkLoaderList> CAPABILITY = null;
 
-    private static final DeferredRegister<Item> ITEMS = new DeferredRegister<>(ForgeRegistries.ITEMS, MODID);
-    private static final DeferredRegister<Block> BLOCKS = new DeferredRegister<>(ForgeRegistries.BLOCKS, MODID);
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
+    private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
 
-    public static final RegistryObject<Block> LOADER_BLOCK = BLOCKS.register(LOADERID, () -> new LoaderBlock(Block.Properties.create(Material.ROCK).hardnessAndResistance(3.5F)));
-    public static final RegistryObject<Item> LOADER_ITEM = ITEMS.register(LOADERID, () -> new BlockItem(LOADER_BLOCK.get(), new Item.Properties().group(ItemGroup.MISC)));
+    public static final RegistryObject<Block> LOADER_BLOCK = BLOCKS.register(LOADERID, () -> new LoaderBlock(Block.Properties.of(Material.STONE).strength(3.5F)));
+    public static final RegistryObject<Item> LOADER_ITEM = ITEMS.register(LOADERID, () -> new BlockItem(LOADER_BLOCK.get(), new Item.Properties().tab(ItemGroup.TAB_MISC)));
 
     public ChunkNoGoByeBye() {
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
@@ -76,9 +76,10 @@ public class ChunkNoGoByeBye {
         CapabilityManager.INSTANCE.register(IChunkLoaderList.class, new ChunkLoaderList.Storage(), () -> new ChunkLoaderList(null));
     }
 
+    @SuppressWarnings("resource")
     @SubscribeEvent
     public void attachWorldCaps(AttachCapabilitiesEvent<World> event) {
-        if (event.getObject().isRemote) return;
+        if (event.getObject().isClientSide) return;
         final LazyOptional<IChunkLoaderList> inst = LazyOptional.of(() -> new ChunkLoaderList((ServerWorld)event.getObject()));
         final ICapabilitySerializable<INBT> provider = new ICapabilitySerializable<INBT>() {
             @Override

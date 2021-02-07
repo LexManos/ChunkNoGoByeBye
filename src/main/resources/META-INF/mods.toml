@@ -1,7 +1,8 @@
 modLoader="javafml"
-loaderVersion="[31,)"
+loaderVersion="[35,)"
 # A URL to refer people to when problems occur with this mod
 #issueTrackerURL="http://my.issue.tracker/" #optional
+license="LGPL 2.1"
 
 [[mods]]
     modId="chunknogobyebye"
@@ -17,13 +18,13 @@ loaderVersion="[31,)"
 [[dependencies.chunknogobyebye]]
     modId="forge"
     mandatory=true
-    versionRange="[31,)"
+    versionRange="[35,)"
     ordering="NONE"
     side="BOTH"
     
 [[dependencies.chunknogobyebye]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.2]"
+    versionRange="[1.16,1.17]"
     ordering="NONE"
     side="BOTH"
